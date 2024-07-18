@@ -1,5 +1,7 @@
 import { Hono } from 'hono';
-import { createHonoMiddleware  } from '@mizu-dev/hono';
+import { stream, streamText, streamSSE } from 'hono/streaming';
+
+import { createHonoMiddleware } from '@fiberplane/hono';
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 import { asc, eq, ilike } from 'drizzle-orm';
@@ -13,6 +15,7 @@ type Bindings = {
 };
 
 const app = new Hono<{ Bindings: Bindings }>()
+
 
 // Add middleware to power local development studio
 //
@@ -310,14 +313,14 @@ app.post('/api/geese/:id/image', async (c) => {
     return c.json({ message: 'Goose not found' }, 404);
   }
 
-  const { name, description, programmingLanguage, motivations, location } = goose;
+  const { name, programmingLanguage, motivations, bio, location } = goose;
 
   const openaiClient = new OpenAI({
     apiKey: c.env.OPENAI_API_KEY,
     fetch: globalThis.fetch,
   });
 
-  const imageDescription = `A goose named ${name} who is a ${programmingLanguage} programmer. ${description}. ${motivations}. Located in ${location}.`;
+  const imageDescription = `Draw a friendly goose in cartoon style named ${name} who is a ${programmingLanguage} programmer. These are his ${motivations}. Located in ${location}. This is his bio: ${bio}`;
 
   const response = await openaiClient.images.generate({
     prompt: imageDescription,
@@ -329,6 +332,30 @@ app.post('/api/geese/:id/image', async (c) => {
   const imageUrl = response.data[0].url;
 
   return c.json({ imageUrl });
+});
+
+app.use('/sse/*', async (c, next) => {
+  c.header('Content-Type', 'text/event-stream');
+  c.header('Cache-Control', 'no-cache');
+  c.header('Connection', 'keep-alive');
+  await next();
+});
+
+app.get('/sse', (c) => {
+
+  return stream(c, async (stream) => {
+      stream.write('retry: 1000\n');
+
+      stream.write('id: 0\n');
+      stream.write('data: hello\n\n');
+      
+      stream.write('id: 1\n');
+      stream.write('data: world\n\n');
+
+      stream.write('event: close\n');
+      stream.write('data: close\n\n');
+  })
+
 });
 
 export default app

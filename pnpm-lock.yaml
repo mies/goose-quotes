@@ -8,12 +8,12 @@ importers:
 
   .:
     dependencies:
+      '@fiberplane/hono':
+        specifier: ^0.2.0
+        version: 0.2.0
       '@libsql/client':
         specifier: ^0.6.2
         version: 0.6.2
-      '@mizu-dev/hono':
-        specifier: ^0.2.0-beta.1
-        version: 0.2.0-beta.1
       '@neondatabase/serverless':
         specifier: ^0.9.3
         version: 0.9.4
@@ -649,6 +649,9 @@ packages:
     resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
     engines: {node: '>=14'}
 
+  '@fiberplane/hono@0.2.0':
+    resolution: {integrity: sha512-ISdgDZvxVsBfxGa/Pmjq24QhDYfWutrymdgdRULRNpqaM+urCQ549+e20tzeTrveZOzVLbQjcXPUzlUyxr/pjg==}
+
   '@jridgewell/resolve-uri@3.1.2':
     resolution: {integrity: sha512-bRISgCIjP20/tbWSPWMEi54QVPRZExkuD9lJL+UIxUKtwVJA8wW1Trb1jMs1RFXo1CBTNZ/5hpC9QvmKWdopKw==}
     engines: {node: '>=6.0.0'}
@@ -708,9 +711,6 @@ packages:
     resolution: {integrity: sha512-ay1X9AobE4BpzG0XPw1gplyLZPGHIgJOovvW23gUrukRegiUP62uzhpRbKNogLlUOynyXeq//prHgPXiebUfWg==}
     cpu: [x64]
     os: [win32]
-
-  '@mizu-dev/hono@0.2.0-beta.1':
-    resolution: {integrity: sha512-45HTGQ4DqlmVZy5l3HbgtN8uka6XxHM7uwOs3KSORUNjs6INyMWR7RjPAKC5M1UTjx4jGDD5uLA26MzAEA8Arw==}
 
   '@neon-rs/load@0.0.4':
     resolution: {integrity: sha512-kTPhdZyTQxB+2wpiRcFWrDcejc4JI6tkPuS7UZCG4l6Zvc5kU/gGQ/ozvHTh1XR5tS+UlfAfGuPajjzQjCiHCw==}
@@ -1043,7 +1043,6 @@ packages:
 
   libsql@0.3.19:
     resolution: {integrity: sha512-Aj5cQ5uk/6fHdmeW0TiXK42FqUlwx7ytmMLPSaUQPin5HKKKuUPD62MAbN4OEweGBBI7q1BekoEN4gPUEL6MZA==}
-    cpu: [x64, arm64, wasm32]
     os: [darwin, linux, win32]
 
   magic-string@0.25.9:
@@ -1619,6 +1618,10 @@ snapshots:
 
   '@fastify/busboy@2.1.1': {}
 
+  '@fiberplane/hono@0.2.0':
+    dependencies:
+      '@neondatabase/serverless': 0.9.4
+
   '@jridgewell/resolve-uri@3.1.2': {}
 
   '@jridgewell/sourcemap-codec@1.5.0': {}
@@ -1682,10 +1685,6 @@ snapshots:
 
   '@libsql/win32-x64-msvc@0.3.19':
     optional: true
-
-  '@mizu-dev/hono@0.2.0-beta.1':
-    dependencies:
-      '@neondatabase/serverless': 0.9.4
 
   '@neon-rs/load@0.0.4': {}
 
