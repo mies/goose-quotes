@@ -8,9 +8,12 @@ export function GooseCard({
   motivations,
   programmingLanguage,
   imageUrl,
+  isFlockLeader,
 }: GooseSelect) {
   return (
     <div class={cardContainerClass}>
+      {isFlockLeader && <div class={flockLeaderBadge}>flock leader</div>}
+
       <figure class={figureClass}>
         <img
           src={
@@ -39,6 +42,21 @@ const cardContainerClass = css`
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 8px;
+  position: relative;
+`;
+
+const flockLeaderBadge = css`
+  position: absolute;
+  right: 4px;
+  top: 4px;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border: 1px solid var(--accent);
+  border-radius: 9999px;
+  line-height: 1;
+  padding: .5em .75em;
+  font-family: var(--mono-font);
+  font-size: 0.8rem;
 `;
 
 const figureClass = css`
