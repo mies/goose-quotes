@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { createHonoMiddleware } from "@fiberplane/hono";
+// import { createHonoMiddleware } from "@fiberplane/hono";
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 import { asc, eq, ilike } from "drizzle-orm";
@@ -16,7 +16,31 @@ const app = new Hono<{ Bindings: Bindings }>();
 
 // Add middleware to power local development studio
 //
-app.use(createHonoMiddleware(app));
+// app.use(createHonoMiddleware(app));
+
+/**
+ * Client side rendering
+ */
+app.get("/client", async (c) => {
+  return c.html(
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+        {import.meta.env.PROD ? (
+          <script type="module" src="/static/client.js" />
+        ) : (
+          <script type="module" src="/src/client/index.tsx" />
+        )}
+        <title>Client</title>
+      </head>
+      <body>
+        <div id="root" />
+      </body>
+    </html>,
+  );
+});
 
 /**
  * Home page

@@ -20,7 +20,7 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240614.0",
-    "@fiberplane/hono": "0.2.1-beta.2",
+    "@fiberplane/hono": "0.2.1-beta.3",
     "@hono/vite-cloudflare-pages": "^0.4.2",
     "@hono/vite-dev-server": "^0.13.1",
     "dotenv": "^16.4.5",

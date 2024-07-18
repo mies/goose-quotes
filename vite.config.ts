@@ -11,7 +11,7 @@ export default defineConfig(({ mode }) => {
       },
       build: {
         rollupOptions: {
-          input: "./src/client/index.ts",
+          input: "./src/client/index.tsx",
           output: {
             entryFileNames: "static/client.js",
           },
@@ -36,7 +36,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       devServer({
         adapter: cloudflareAdapter,
-        entry: "./src/index.ts",
+        entry: "./src/index.tsx",
       }),
       pages(),
     ],
