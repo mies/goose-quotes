@@ -7,8 +7,7 @@ import type { GooseSelect } from "../db/schema";
 import { GooseCard } from "./Goose";
 import GooseForm from "./GooseForm";
 
-const getClient = hc<GetGeese>("/");
-const postClient = hc<AddGoose>("/");
+const client = hc<GetGeese | AddGoose>("/");
 
 export default function Client() {
   const [geese, setGeese] = useState<Array<GooseSelect>>([]);
@@ -16,14 +15,13 @@ export default function Client() {
 
   useEffect(() => {
     (async () => {
-      const res = await getClient.api.geese.$get();
+      const res = await client.api.geese.$get();
       if (!res.ok) {
         console.error("Failed to fetch geese");
         return;
       }
 
       const geese = await res.json();
-
       // @ts-ignore the geese date entries don't match Date/string
       setGeese(geese);
     })();
@@ -42,7 +40,7 @@ export default function Client() {
       return;
     }
 
-    const res = await postClient.api.geese.$post({ json: { name } });
+    const res = await client.api.geese.$post({ json: { name } });
     if (!res.ok) {
       console.error("Failed to add goose");
       return;
@@ -63,7 +61,12 @@ export default function Client() {
           Add goose
         </button>
       )}
-      <h1>Silly geese</h1>
+
+      <h1>Epic geese</h1>
+
+      <p class="notice">
+        Click on a goose to see nothing happen.
+      </p>
 
       <div class={containerClass}>
         {geese.map((goose) => (
@@ -80,6 +83,7 @@ const containerClass = css`
   grid-template-columns: repeat(2, 1fr);
   grid-auto-flow: row;
   gap: 32px;
+  margin-block-end: 32px;
 `;
 
 /* biome-ignore lint/style/noNonNullAssertion: Biome doesn't know we've been
