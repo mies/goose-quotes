@@ -8,7 +8,8 @@ export const geese = pgTable('geese', {
   programmingLanguage: text('programming_language'),
   motivations: jsonb('motivations'),
   location: text('location'),
-  bio: text('bio'), // Added this line
+  bio: text('bio'),
+  imageUrl: text('image_url'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });

@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@fiberplane/hono':
+        specifier: ^0.2.0
+        version: 0.2.0
       '@libsql/client':
         specifier: ^0.6.2
         version: 0.6.2
@@ -30,9 +33,6 @@ importers:
       '@cloudflare/workers-types':
         specifier: ^4.20240614.0
         version: 4.20240712.0
-      '@fiberplane/hono':
-        specifier: 0.2.1-beta.3
-        version: 0.2.1-beta.3
       '@hono/vite-cloudflare-pages':
         specifier: ^0.4.2
         version: 0.4.2(hono@4.4.13)
@@ -658,8 +658,8 @@ packages:
     resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
     engines: {node: '>=14'}
 
-  '@fiberplane/hono@0.2.1-beta.3':
-    resolution: {integrity: sha512-CVjvTy0kKesmeQeO4ky5Lsytqe08Be4Uo8ILj1bzh3xg/kHiJPo/t/3PSaF9m+SkFQdv3jGTBtx/xt15yPmIKQ==}
+  '@fiberplane/hono@0.2.0':
+    resolution: {integrity: sha512-ISdgDZvxVsBfxGa/Pmjq24QhDYfWutrymdgdRULRNpqaM+urCQ549+e20tzeTrveZOzVLbQjcXPUzlUyxr/pjg==}
 
   '@hono/node-server@1.12.0':
     resolution: {integrity: sha512-e6oHjNiErRxsZRZBmc2KucuvY3btlO/XPncIpP2X75bRdTilF9GLjm3NHvKKunpJbbJJj31/FoPTksTf8djAVw==}
@@ -1780,7 +1780,7 @@ snapshots:
 
   '@fastify/busboy@2.1.1': {}
 
-  '@fiberplane/hono@0.2.1-beta.3':
+  '@fiberplane/hono@0.2.0':
     dependencies:
       '@neondatabase/serverless': 0.9.4
 
