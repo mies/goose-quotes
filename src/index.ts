@@ -1,4 +1,8 @@
 import { Hono } from 'hono';
+
+// needed for sse
+import { cors } from 'hono/cors';
+
 import { stream, streamText, streamSSE } from 'hono/streaming';
 
 import { createHonoMiddleware } from '@fiberplane/hono';
@@ -15,6 +19,23 @@ type Bindings = {
 };
 
 const app = new Hono<{ Bindings: Bindings }>()
+
+
+// needed for SSE
+app.use('*', cors(
+  {
+      origin: '*',
+      allowMethods: ['GET', 'POST', 'PATCH'],
+      allowHeaders: ['Content-Type'],
+  }
+))
+
+app.use('/api/geese/*', async (c, next) => {
+  c.header('Content-Type', 'text/event-stream');
+  c.header('Cache-Control', 'no-cache');
+  c.header('Connection', 'keep-alive');
+  await next();
+});
 
 
 // Add middleware to power local development studio
@@ -76,9 +97,16 @@ app.post('/api/geese', async (c) => {
     motivations: geese.motivations,
     location: geese.location
   });
-
   return c.json(created?.[0]);
-})
+  // return streamSSE(c, async (stream) => {
+  //   if (created) {
+  //     await stream.writeSSE({ data: JSON.stringify(created) });
+  //   } else {
+  //     await stream.writeSSE({ data: 'Error creating Goose' });
+  //   }
+  
+  // })
+  })
 
 /**
  * Get all Geese that are flock leaders
@@ -320,7 +348,7 @@ app.post('/api/geese/:id/image', async (c) => {
     fetch: globalThis.fetch,
   });
 
-  const imageDescription = `Draw a friendly goose in cartoon style named ${name} who is a ${programmingLanguage} programmer. These are his ${motivations}. Located in ${location}. This is his bio: ${bio}`;
+  const imageDescription = `Draw a friendly goose in an 8bit style named ${name} who is a ${programmingLanguage} programmer. These are his ${motivations}. Located in ${location}. `;
 
   const response = await openaiClient.images.generate({
     prompt: imageDescription,
@@ -331,16 +359,20 @@ app.post('/api/geese/:id/image', async (c) => {
 
   const imageUrl = response.data[0].url;
 
-  return c.json({ imageUrl });
+  //return c.json({ imageUrl });
+   // Update the goose with the generated image URL
+   const updatedGoose = await db.update(geese)
+   .set({ imageUrl })
+   .where(eq(geese.id, +id))
+   .returning();
+
+ return c.json(updatedGoose[0]);
 });
 
-app.use('/sse/*', async (c, next) => {
-  c.header('Content-Type', 'text/event-stream');
-  c.header('Cache-Control', 'no-cache');
-  c.header('Connection', 'keep-alive');
-  await next();
-});
 
+
+
+// this needs to subscribe to a pubsub topic
 app.get('/sse', (c) => {
 
   return stream(c, async (stream) => {
