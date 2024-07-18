@@ -1,27 +1,10 @@
 import { css } from "hono/css";
-import { hc } from "hono/client";
 
-import type { AddGoose } from "..";
+type GooseFormProps = {
+  handleFormSubmission: (event: Event) => void;
+};
 
-const client = hc<AddGoose>("/");
-
-export default function GooseForm() {
-  const handleFormSubmission = async (event: Event) => {
-    event.preventDefault();
-    const target = event.target;
-    if (!(target instanceof HTMLFormElement)) {
-      return;
-    }
-
-    const formData = new FormData(target);
-    const name = formData.get("name");
-    if (typeof name !== "string") {
-      return;
-    }
-
-    await client.api.geese.$post({ json: { name } });
-  };
-
+export default function GooseForm({ handleFormSubmission }: GooseFormProps) {
   return (
     <form class={formClass} onSubmit={handleFormSubmission}>
       <label>
