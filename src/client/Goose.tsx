@@ -1,30 +1,28 @@
 import { css } from "hono/css";
 
-export type Goose = {
-  name: string;
-  id: number;
-  isFlockLeader?: boolean;
-  programmingLanguage?: string;
-  motivations?: string;
-  location?: string;
-};
+import type { GooseSelect } from "../db/schema";
 
 export function GooseCard({
   name,
-  id,
-  isFlockLeader,
   location,
   motivations,
   programmingLanguage,
-}: Goose) {
+  imageUrl,
+}: GooseSelect) {
   return (
     <div class={cardContainerClass}>
       <figure class={figureClass}>
-        <img src="https://placedog.net/100" alt="" />
+        <img
+          src={
+            imageUrl ??
+            "https://github.com/fiberplane/honc-template/raw/main/honc.png"
+          }
+          alt=""
+        />
       </figure>
 
       <div class={contentClass}>
-        <h3>{name}</h3>
+        <h4>{name}</h4>
         <p>{location}</p>
 
         <p>{motivations}</p>
@@ -33,6 +31,15 @@ export function GooseCard({
     </div>
   );
 }
+
+const cardContainerClass = css`
+  display: grid;
+  grid: auto / 100px 1fr;
+  grid-column-gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 8px;
+`;
 
 const figureClass = css`
   margin: 0;
@@ -44,15 +51,15 @@ const figureClass = css`
   }
 `;
 
-const cardContainerClass = css`
-  display: grid;
-  grid:  auto /100px 1fr;
-`;
-
 const contentClass = css`
   display: grid;
 
-  p {
+  > * {
     margin: 0;
+    line-height: 1;
+  }
+
+  p {
+    font-size: 0.8rem;
   }
 `;

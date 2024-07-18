@@ -1,102 +1,146 @@
-import { Hono } from 'hono';
+import { Hono } from "hono";
 
 // needed for sse
-import { cors } from 'hono/cors';
+import { cors } from "hono/cors";
 
-import { stream, streamText, streamSSE } from 'hono/streaming';
+import { stream } from "hono/streaming";
+import { zValidator } from "@hono/zod-validator";
 
-import { createHonoMiddleware } from '@fiberplane/hono';
-import { neon } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-http';
-import { asc, eq, ilike } from 'drizzle-orm';
+// import { createHonoMiddleware } from "@fiberplane/hono";
+import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-http";
+import { asc, eq, ilike } from "drizzle-orm";
 import OpenAI from "openai";
 
-import { geese } from './db/schema';
+import { geese, selectGeeseSchema } from "./db/schema";
+import { Style } from "hono/css";
 
 type Bindings = {
   DATABASE_URL: string;
   OPENAI_API_KEY: string;
 };
 
-const app = new Hono<{ Bindings: Bindings }>()
-
+const app = new Hono<{ Bindings: Bindings }>();
 
 // needed for SSE
-app.use('*', cors(
-  {
-      origin: '*',
-      allowMethods: ['GET', 'POST', 'PATCH'],
-      allowHeaders: ['Content-Type'],
-  }
-))
+app.use(
+  "*",
+  cors({
+    origin: "*",
+    allowMethods: ["GET", "POST", "PATCH"],
+    allowHeaders: ["Content-Type"],
+  }),
+);
 
-app.use('/api/geese/*', async (c, next) => {
-  c.header('Content-Type', 'text/event-stream');
-  c.header('Cache-Control', 'no-cache');
-  c.header('Connection', 'keep-alive');
+app.use("/api/geese/*", async (c, next) => {
+  c.header("Content-Type", "text/event-stream");
+  c.header("Cache-Control", "no-cache");
+  c.header("Connection", "keep-alive");
   await next();
 });
 
-
 // Add middleware to power local development studio
 //
-// @ts-expect-error - type error only exists during local development of middleware!
-app.use(createHonoMiddleware(app));
+// app.use(createHonoMiddleware(app));
+
+/**
+ * Client side rendering
+ */
+app.get("/client", async (c) => {
+  return c.html(
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link
+          rel="stylesheet"
+          href="https://cdn.simplecss.org/simple.min.css"
+        />
+        <Style />
+
+        {import.meta.env.PROD ? (
+          <script type="module" src="/static/client.js" />
+        ) : (
+          <script type="module" src="/src/client/index.tsx" />
+        )}
+        <title>Client</title>
+      </head>
+      <body style="grid-template-columns: 1fr min(72rem,90%) 1fr">
+        <div id="root" />
+      </body>
+    </html>,
+  );
+});
 
 /**
  * Home page
- * 
+ *
  * If `shouldHonk` query parameter is present, then print "Honk honk!"
  */
-app.get('/', (c) => {
+app.get("/", (c) => {
   const { shouldHonk } = c.req.query();
-  const honk = typeof shouldHonk !== "undefined" ? 'Honk honk!' : '';
-  return c.text(`Hello Goose Quotes! ${honk}`.trim())
-})
+  const honk = typeof shouldHonk !== "undefined" ? "Honk honk!" : "";
+  return c.text(`Hello Goose Quotes! ${honk}`.trim());
+});
 
 /**
  * Search Geese by name
- * 
+ *
  * If `name` query parameter is not defined, then return all geese
  */
-app.get('/api/geese', async (c) => {
-  const sql = neon(c.env.DATABASE_URL)
+const getGeese = app.get("/api/geese", async (c) => {
+  const sql = neon(c.env.DATABASE_URL);
   const db = drizzle(sql);
 
   const name = c.req.query("name");
 
   if (!name) {
-    return c.json(await db.select().from(geese))
+    return c.json(await db.select().from(geese));
   }
 
-  const searchResults = await db.select().from(geese)
+  const searchResults = await db
+    .select()
+    .from(geese)
     .where(ilike(geese.name, `%${name}%`))
     .orderBy(asc(geese.name));
 
   return c.json(searchResults);
-})
+});
+
+export type GetGeese = typeof getGeese;
 
 /**
  * Create a Goose and return the Goose
- * 
+ *
  * Only requires a `name` parameter in the request body
  */
-app.post('/api/geese', async (c) => {
-  const sql = neon(c.env.DATABASE_URL)
+app.post("/api/geese", async (c) => {
+  const sql = neon(c.env.DATABASE_URL);
   const db = drizzle(sql);
 
-  const { name, isFlockLeader, programmingLanguage, motivations, location } = await c.req.json()
-  const description = `A person named ${name} who talks like a Goose`
+  const { name, isFlockLeader, programmingLanguage, motivations, location } =
+    await c.req.json();
+  const description = `A person named ${name} who talks like a Goose`;
 
-  const created = await db.insert(geese).values({ name, description, isFlockLeader, programmingLanguage, motivations, location }).returning({
-    id: geese.id,
-    name: geese.name,
-    description: geese.description,
-    isFlockLeader: geese.isFlockLeader,
-    programmingLanguage: geese.programmingLanguage,
-    motivations: geese.motivations,
-    location: geese.location
-  });
+  const created = await db
+    .insert(geese)
+    .values({
+      name,
+      description,
+      isFlockLeader,
+      programmingLanguage,
+      motivations,
+      location,
+    })
+    .returning({
+      id: geese.id,
+      name: geese.name,
+      description: geese.description,
+      isFlockLeader: geese.isFlockLeader,
+      programmingLanguage: geese.programmingLanguage,
+      motivations: geese.motivations,
+      location: geese.location,
+    });
   return c.json(created?.[0]);
   // return streamSSE(c, async (stream) => {
   //   if (created) {
@@ -104,19 +148,22 @@ app.post('/api/geese', async (c) => {
   //   } else {
   //     await stream.writeSSE({ data: 'Error creating Goose' });
   //   }
-  
+
   // })
-  })
+});
 
 /**
  * Get all Geese that are flock leaders
  * Make sure this route is above the `/api/geese/:id` route so that the flock leader is not treated as an id
  */
-app.get('/api/geese/flock-leaders', async (c) => {
-  const sql = neon(c.env.DATABASE_URL)
+app.get("/api/geese/flock-leaders", async (c) => {
+  const sql = neon(c.env.DATABASE_URL);
   const db = drizzle(sql);
 
-  const flockLeaders = await db.select().from(geese).where(eq(geese.isFlockLeader, true));
+  const flockLeaders = await db
+    .select()
+    .from(geese)
+    .where(eq(geese.isFlockLeader, true));
 
   return c.json(flockLeaders);
 });
@@ -124,35 +171,34 @@ app.get('/api/geese/flock-leaders', async (c) => {
 /**
  * Get a Goose by id
  */
-app.get('/api/geese/:id', async (c) => {
-  const sql = neon(c.env.DATABASE_URL)
+app.get("/api/geese/:id", async (c) => {
+  const sql = neon(c.env.DATABASE_URL);
   const db = drizzle(sql);
 
-  const id = c.req.param('id');
+  const id = c.req.param("id");
 
   const goose = (await db.select().from(geese).where(eq(geese.id, +id)))?.[0];
 
   if (!goose) {
-    return c.json({ message: 'Goose not found' }, 404);
+    return c.json({ message: "Goose not found" }, 404);
   }
 
   return c.json(goose);
 });
 
-
 /**
  * Generate Goose Quotes
  */
-app.post('/api/geese/:id/generate', async c => {
-  const sql = neon(c.env.DATABASE_URL)
+app.post("/api/geese/:id/generate", async (c) => {
+  const sql = neon(c.env.DATABASE_URL);
   const db = drizzle(sql);
 
-  const id = c.req.param('id');
+  const id = c.req.param("id");
 
   const goose = (await db.select().from(geese).where(eq(geese.id, +id)))?.[0];
 
   if (!goose) {
-    return c.json({ message: 'Goose not found' }, 404);
+    return c.json({ message: "Goose not found" }, 404);
   }
 
   const { name: gooseName } = goose;
@@ -189,22 +235,24 @@ app.post('/api/geese/:id/generate', async c => {
     max_tokens: 2048,
   });
 
-  const quotes = response.choices[0].message.content?.split("\n").filter(quote => quote.length > 0);
-  return c.json({ name: goose.name, quotes })
-})
+  const quotes = response.choices[0].message.content
+    ?.split("\n")
+    .filter((quote) => quote.length > 0);
+  return c.json({ name: goose.name, quotes });
+});
 
 /**
  * Honk at a Goose by id
  */
-app.post('/api/geese/:id/honk', async (c) => {
-  const sql = neon(c.env.DATABASE_URL)
+app.post("/api/geese/:id/honk", async (c) => {
+  const sql = neon(c.env.DATABASE_URL);
   const db = drizzle(sql);
 
-  const id = c.req.param('id');
+  const id = c.req.param("id");
   const goose = (await db.select().from(geese).where(eq(geese.id, +id)))?.[0];
 
   if (!goose) {
-    return c.json({ message: 'Goose not found' }, 404);
+    return c.json({ message: "Goose not found" }, 404);
   }
 
   return c.json({ message: `Honk honk! ${goose.name} honks back at you!` });
@@ -213,33 +261,37 @@ app.post('/api/geese/:id/honk', async (c) => {
 /**
  * Update a Goose by id
  */
-app.patch('/api/geese/:id', async (c) => {
-  const sql = neon(c.env.DATABASE_URL)
+app.patch("/api/geese/:id", async (c) => {
+  const sql = neon(c.env.DATABASE_URL);
   const db = drizzle(sql);
 
-  const id = c.req.param('id');
-  const { name } = await c.req.json()
+  const id = c.req.param("id");
+  const { name } = await c.req.json();
 
-  const goose = (await db.update(geese).set({ name }).where(eq(geese.id, +id)).returning())?.[0];
+  const goose = (
+    await db.update(geese).set({ name }).where(eq(geese.id, +id)).returning()
+  )?.[0];
 
   if (!goose) {
-    return c.json({ message: 'Goose not found' }, 404);
+    return c.json({ message: "Goose not found" }, 404);
   }
 
   return c.json(goose);
 });
 
-
 /**
  * Get Geese by programming language
  */
-app.get('/api/geese/language/:language', async (c) => {
-  const sql = neon(c.env.DATABASE_URL)
+app.get("/api/geese/language/:language", async (c) => {
+  const sql = neon(c.env.DATABASE_URL);
   const db = drizzle(sql);
 
-  const language = c.req.param('language');
+  const language = c.req.param("language");
 
-  const geeseByLanguage = await db.select().from(geese).where(ilike(geese.programmingLanguage, `%${language}%`));
+  const geeseByLanguage = await db
+    .select()
+    .from(geese)
+    .where(ilike(geese.programmingLanguage, `%${language}%`));
 
   return c.json(geeseByLanguage);
 });
@@ -247,42 +299,50 @@ app.get('/api/geese/language/:language', async (c) => {
 /**
  * Update a Goose's motivations by id
  */
-app.patch('/api/geese/:id/motivations', async (c) => {
-  const sql = neon(c.env.DATABASE_URL)
+app.patch("/api/geese/:id/motivations", async (c) => {
+  const sql = neon(c.env.DATABASE_URL);
   const db = drizzle(sql);
 
-  const id = c.req.param('id');
+  const id = c.req.param("id");
   const { motivations } = await c.req.json();
 
-  const updatedGoose = (await db.update(geese)
-    .set({ motivations })
-    .where(eq(geese.id, +id))
-    .returning())?.[0];
+  const updatedGoose = (
+    await db
+      .update(geese)
+      .set({ motivations })
+      .where(eq(geese.id, +id))
+      .returning()
+  )?.[0];
 
   if (!updatedGoose) {
-    return c.json({ message: 'Goose not found' }, 404);
+    return c.json({ message: "Goose not found" }, 404);
   }
 
   return c.json(updatedGoose);
 });
 
-
 /**
  * Generate Goose Bio
  */
-app.post('/api/geese/:id/bio', async c => {
-  const sql = neon(c.env.DATABASE_URL)
+app.post("/api/geese/:id/bio", async (c) => {
+  const sql = neon(c.env.DATABASE_URL);
   const db = drizzle(sql);
 
-  const id = c.req.param('id');
+  const id = c.req.param("id");
 
   const goose = (await db.select().from(geese).where(eq(geese.id, +id)))?.[0];
 
   if (!goose) {
-    return c.json({ message: 'Goose not found' }, 404);
+    return c.json({ message: "Goose not found" }, 404);
   }
 
-  const { name: gooseName, description, programmingLanguage, motivations, location } = goose;
+  const {
+    name: gooseName,
+    description,
+    programmingLanguage,
+    motivations,
+    location,
+  } = goose;
 
   const openaiClient = new OpenAI({
     apiKey: c.env.OPENAI_API_KEY,
@@ -313,32 +373,30 @@ app.post('/api/geese/:id/bio', async c => {
     max_tokens: 2048,
   });
 
-  
-
   const bio = response.choices[0].message.content;
 
-   // Update the goose with the generated bio
-   const updatedGoose = await db.update(geese)
-   .set({ bio })
-   .where(eq(geese.id, +id))
-   .returning();
+  // Update the goose with the generated bio
+  const updatedGoose = await db
+    .update(geese)
+    .set({ bio })
+    .where(eq(geese.id, +id))
+    .returning();
 
- return c.json(updatedGoose[0]);
-
-})
+  return c.json(updatedGoose[0]);
+});
 
 /**
  * Generate Goose Image
  */
-app.post('/api/geese/:id/image', async (c) => {
+app.post("/api/geese/:id/image", async (c) => {
   const sql = neon(c.env.DATABASE_URL);
   const db = drizzle(sql);
 
-  const id = c.req.param('id');
+  const id = c.req.param("id");
   const goose = (await db.select().from(geese).where(eq(geese.id, +id)))?.[0];
 
   if (!goose) {
-    return c.json({ message: 'Goose not found' }, 404);
+    return c.json({ message: "Goose not found" }, 404);
   }
 
   const { name, programmingLanguage, motivations, bio, location } = goose;
@@ -356,41 +414,36 @@ app.post('/api/geese/:id/image', async (c) => {
     size: "1024x1024",
   });
 
-
   const imageUrl = response.data[0].url;
 
   //return c.json({ imageUrl });
-   // Update the goose with the generated image URL
-   const updatedGoose = await db.update(geese)
-   .set({ imageUrl })
-   .where(eq(geese.id, +id))
-   .returning();
+  // Update the goose with the generated image URL
+  const updatedGoose = await db
+    .update(geese)
+    .set({ imageUrl })
+    .where(eq(geese.id, +id))
+    .returning();
 
- return c.json(updatedGoose[0]);
+  return c.json(updatedGoose[0]);
 });
-
-
-
 
 // this needs to subscribe to a pubsub topic
-app.get('/sse', (c) => {
-
+app.get("/sse", (c) => {
   return stream(c, async (stream) => {
-      stream.write('retry: 1000\n');
+    stream.write("retry: 1000\n");
 
-      stream.write('id: 0\n');
-      stream.write('data: hello\n\n');
-      
-      stream.write('id: 1\n');
-      stream.write('data: world\n\n');
+    stream.write("id: 0\n");
+    stream.write("data: hello\n\n");
 
-      stream.write('event: close\n');
-      stream.write('data: close\n\n');
-  })
+    stream.write("id: 1\n");
+    stream.write("data: world\n\n");
 
+    stream.write("event: close\n");
+    stream.write("data: close\n\n");
+  });
 });
 
-export default app
+export default app;
 
 function trimPrompt(prompt: string) {
   return prompt

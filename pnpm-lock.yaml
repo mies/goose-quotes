@@ -8,9 +8,6 @@ importers:
 
   .:
     dependencies:
-      '@fiberplane/hono':
-        specifier: ^0.2.0
-        version: 0.2.0
       '@libsql/client':
         specifier: ^0.6.2
         version: 0.6.2
@@ -20,6 +17,9 @@ importers:
       drizzle-orm:
         specifier: ^0.31.2
         version: 0.31.4(@cloudflare/workers-types@4.20240712.0)(@libsql/client@0.6.2)(@neondatabase/serverless@0.9.4)(@types/pg@8.11.6)(postgres@3.4.4)
+      drizzle-zod:
+        specifier: ^0.5.1
+        version: 0.5.1(drizzle-orm@0.31.4(@cloudflare/workers-types@4.20240712.0)(@libsql/client@0.6.2)(@neondatabase/serverless@0.9.4)(@types/pg@8.11.6)(postgres@3.4.4))(zod@3.23.8)
       hono:
         specifier: ^4.4.0
         version: 4.4.13
@@ -29,16 +29,25 @@ importers:
       vite:
         specifier: ^5.3.4
         version: 5.3.4(@types/node@20.14.10)
+      zod:
+        specifier: ^3.23.8
+        version: 3.23.8
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^4.20240614.0
         version: 4.20240712.0
+      '@fiberplane/hono':
+        specifier: 0.2.1-beta.3
+        version: 0.2.1-beta.3
       '@hono/vite-cloudflare-pages':
         specifier: ^0.4.2
         version: 0.4.2(hono@4.4.13)
       '@hono/vite-dev-server':
         specifier: ^0.13.1
         version: 0.13.1(hono@4.4.13)
+      '@hono/zod-validator':
+        specifier: ^0.2.2
+        version: 0.2.2(hono@4.4.13)(zod@3.23.8)
       dotenv:
         specifier: ^16.4.5
         version: 16.4.5
@@ -658,8 +667,8 @@ packages:
     resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
     engines: {node: '>=14'}
 
-  '@fiberplane/hono@0.2.0':
-    resolution: {integrity: sha512-ISdgDZvxVsBfxGa/Pmjq24QhDYfWutrymdgdRULRNpqaM+urCQ549+e20tzeTrveZOzVLbQjcXPUzlUyxr/pjg==}
+  '@fiberplane/hono@0.2.1-beta.3':
+    resolution: {integrity: sha512-CVjvTy0kKesmeQeO4ky5Lsytqe08Be4Uo8ILj1bzh3xg/kHiJPo/t/3PSaF9m+SkFQdv3jGTBtx/xt15yPmIKQ==}
 
   '@hono/node-server@1.12.0':
     resolution: {integrity: sha512-e6oHjNiErRxsZRZBmc2KucuvY3btlO/XPncIpP2X75bRdTilF9GLjm3NHvKKunpJbbJJj31/FoPTksTf8djAVw==}
@@ -676,6 +685,12 @@ packages:
     engines: {node: '>=18.14.1'}
     peerDependencies:
       hono: '*'
+
+  '@hono/zod-validator@0.2.2':
+    resolution: {integrity: sha512-dSDxaPV70Py8wuIU2QNpoVEIOSzSXZ/6/B/h4xA7eOMz7+AarKTSGV8E6QwrdcCbBLkpqfJ4Q2TmBO0eP1tCBQ==}
+    peerDependencies:
+      hono: '>=3.9.0'
+      zod: ^3.19.1
 
   '@jridgewell/resolve-uri@3.1.2':
     resolution: {integrity: sha512-bRISgCIjP20/tbWSPWMEi54QVPRZExkuD9lJL+UIxUKtwVJA8wW1Trb1jMs1RFXo1CBTNZ/5hpC9QvmKWdopKw==}
@@ -1036,6 +1051,12 @@ packages:
         optional: true
       sqlite3:
         optional: true
+
+  drizzle-zod@0.5.1:
+    resolution: {integrity: sha512-C/8bvzUH/zSnVfwdSibOgFjLhtDtbKYmkbPbUCq46QZyZCH6kODIMSOgZ8R7rVjoI+tCj3k06MRJMDqsIeoS4A==}
+    peerDependencies:
+      drizzle-orm: '>=0.23.13'
+      zod: '*'
 
   esbuild-register@3.5.0:
     resolution: {integrity: sha512-+4G/XmakeBAsvJuDugJvtyF1x+XJT4FMocynNpxrvEBViirpfUn2PgNpCHedfWhF4WokNsO/OvMKrmJOIJsI5A==}
@@ -1780,7 +1801,7 @@ snapshots:
 
   '@fastify/busboy@2.1.1': {}
 
-  '@fiberplane/hono@0.2.0':
+  '@fiberplane/hono@0.2.1-beta.3':
     dependencies:
       '@neondatabase/serverless': 0.9.4
 
@@ -1800,6 +1821,11 @@ snapshots:
       - bufferutil
       - supports-color
       - utf-8-validate
+
+  '@hono/zod-validator@0.2.2(hono@4.4.13)(zod@3.23.8)':
+    dependencies:
+      hono: 4.4.13
+      zod: 3.23.8
 
   '@jridgewell/resolve-uri@3.1.2': {}
 
@@ -2049,6 +2075,11 @@ snapshots:
       '@neondatabase/serverless': 0.9.4
       '@types/pg': 8.11.6
       postgres: 3.4.4
+
+  drizzle-zod@0.5.1(drizzle-orm@0.31.4(@cloudflare/workers-types@4.20240712.0)(@libsql/client@0.6.2)(@neondatabase/serverless@0.9.4)(@types/pg@8.11.6)(postgres@3.4.4))(zod@3.23.8):
+    dependencies:
+      drizzle-orm: 0.31.4(@cloudflare/workers-types@4.20240712.0)(@libsql/client@0.6.2)(@neondatabase/serverless@0.9.4)(@types/pg@8.11.6)(postgres@3.4.4)
+      zod: 3.23.8
 
   esbuild-register@3.5.0(esbuild@0.19.12):
     dependencies:

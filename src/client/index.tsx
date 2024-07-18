@@ -1,34 +1,39 @@
-import { css, Style } from "hono/css";
-import { Fragment, useEffect, useState } from "hono/jsx";
-import { render } from "hono/jsx/dom";
-import { type Goose, GooseCard } from "./Goose";
+import { css } from "hono/css";
+import { render, useEffect, useState } from "hono/jsx/dom";
+import { hc } from "hono/client";
+
+import { GooseCard } from "./Goose";
+import type { GetGeese } from "..";
+import type { GooseSelect } from "../db/schema";
+
+const client = hc<GetGeese>("/");
 
 export default function Client() {
-  const [geese, setGeese] = useState<Array<Goose>>([]);
+  const [geese, setGeese] = useState<Array<GooseSelect>>([]);
+
   useEffect(() => {
     (async () => {
-      try {
-        const response = await fetch("/api/geese");
-        const geese: Array<Goose> = await response.json();
-        setGeese(geese);
-      } catch (err) {
-        console.error(err);
+      const res = await client.api.geese.$get();
+      if (!res.ok) {
+        console.error("Failed to fetch geese");
+        return;
       }
+
+      const geese = await res.json();
+
+      // @ts-ignore
+      setGeese(geese);
     })();
-  });
+  }, []);
 
   return (
     <>
-      <Style />
-      <div class={wrapperClass}>
+      <div>
         <h1>Hi from client</h1>
 
         <div class={containerClass}>
           {geese.map((goose) => (
-            <Fragment key={goose.id.toString()}>
-              {/* wtf? */}
-              <GooseCard {...goose} />
-            </Fragment>
+            <GooseCard {...goose} />
           ))}
         </div>
       </div>
@@ -36,16 +41,11 @@ export default function Client() {
   );
 }
 
-const wrapperClass = css`
-  width: min(100%, 1200px);
-  margin-inline: auto;
-`;
-
 const containerClass = css`
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   grid-auto-flow: row;
-  gap: 20px;
+  gap: 32px;
 `;
 
 // biome-ignore lint/style/noNonNullAssertion: <explanation>
