@@ -5,11 +5,13 @@ import { hc } from "hono/client";
 import { GooseCard } from "./Goose";
 import type { GetGeese } from "..";
 import type { GooseSelect } from "../db/schema";
+import GooseForm from "./GooseForm";
 
 const client = hc<GetGeese>("/");
 
 export default function Client() {
   const [geese, setGeese] = useState<Array<GooseSelect>>([]);
+  const [showAddForm, setShowAddForm] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -21,23 +23,28 @@ export default function Client() {
 
       const geese = await res.json();
 
-      // @ts-ignore
+      // @ts-ignore the geese date entries don't match Date/string
       setGeese(geese);
     })();
   }, []);
 
   return (
-    <>
-      <div>
-        <h1>Hi from client</h1>
+    <main>
+      {showAddForm ? (
+        <GooseForm />
+      ) : (
+        <button type="button" onClick={() => setShowAddForm((s) => !s)}>
+          Add goose
+        </button>
+      )}
+      <h1>Hi from client</h1>
 
-        <div class={containerClass}>
-          {geese.map((goose) => (
-            <GooseCard {...goose} />
-          ))}
-        </div>
+      <div class={containerClass}>
+        {geese.map((goose) => (
+          <GooseCard {...goose} />
+        ))}
       </div>
-    </>
+    </main>
   );
 }
 

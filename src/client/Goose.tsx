@@ -37,7 +37,7 @@ const cardContainerClass = css`
   grid: auto / 100px 1fr;
   grid-column-gap: 8px;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 8px;
   padding: 8px;
 `;
 

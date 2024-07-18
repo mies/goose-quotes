@@ -12,7 +12,7 @@ import { drizzle } from "drizzle-orm/neon-http";
 import { asc, eq, ilike } from "drizzle-orm";
 import OpenAI from "openai";
 
-import { geese, selectGeeseSchema } from "./db/schema";
+import { geese, insertGeeseSchema, selectGeeseSchema } from "./db/schema";
 import { Style } from "hono/css";
 
 type Bindings = {
@@ -66,6 +66,10 @@ app.get("/client", async (c) => {
         <title>Client</title>
       </head>
       <body style="grid-template-columns: 1fr min(72rem,90%) 1fr">
+        <header>
+          <h1>Goose quotes api</h1>
+          <p>Get your HONC on!</p>
+        </header>
         <div id="root" />
       </body>
     </html>,
@@ -114,43 +118,49 @@ export type GetGeese = typeof getGeese;
  *
  * Only requires a `name` parameter in the request body
  */
-app.post("/api/geese", async (c) => {
-  const sql = neon(c.env.DATABASE_URL);
-  const db = drizzle(sql);
+const addGoose = app.post(
+  "/api/geese",
+  zValidator("json", insertGeeseSchema),
+  async (c) => {
+    const sql = neon(c.env.DATABASE_URL);
+    const db = drizzle(sql);
 
-  const { name, isFlockLeader, programmingLanguage, motivations, location } =
-    await c.req.json();
-  const description = `A person named ${name} who talks like a Goose`;
+    const { name, isFlockLeader, programmingLanguage, motivations, location } =
+      await c.req.json();
+    const description = `A person named ${name} who talks like a Goose`;
 
-  const created = await db
-    .insert(geese)
-    .values({
-      name,
-      description,
-      isFlockLeader,
-      programmingLanguage,
-      motivations,
-      location,
-    })
-    .returning({
-      id: geese.id,
-      name: geese.name,
-      description: geese.description,
-      isFlockLeader: geese.isFlockLeader,
-      programmingLanguage: geese.programmingLanguage,
-      motivations: geese.motivations,
-      location: geese.location,
-    });
-  return c.json(created?.[0]);
-  // return streamSSE(c, async (stream) => {
-  //   if (created) {
-  //     await stream.writeSSE({ data: JSON.stringify(created) });
-  //   } else {
-  //     await stream.writeSSE({ data: 'Error creating Goose' });
-  //   }
+    const created = await db
+      .insert(geese)
+      .values({
+        name,
+        description,
+        isFlockLeader,
+        programmingLanguage,
+        motivations,
+        location,
+      })
+      .returning({
+        id: geese.id,
+        name: geese.name,
+        description: geese.description,
+        isFlockLeader: geese.isFlockLeader,
+        programmingLanguage: geese.programmingLanguage,
+        motivations: geese.motivations,
+        location: geese.location,
+      });
+    return c.json(created?.[0]);
+    // return streamSSE(c, async (stream) => {
+    //   if (created) {
+    //     await stream.writeSSE({ data: JSON.stringify(created) });
+    //   } else {
+    //     await stream.writeSSE({ data: 'Error creating Goose' });
+    //   }
 
-  // })
-});
+    // })
+  },
+);
+
+export type AddGoose = typeof addGoose;
 
 /**
  * Get all Geese that are flock leaders
