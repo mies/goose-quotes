@@ -1,10 +1,10 @@
+import { hc } from "hono/client";
 import { css } from "hono/css";
 import { render, useEffect, useState } from "hono/jsx/dom";
-import { hc } from "hono/client";
 
-import { GooseCard } from "./Goose";
 import type { AddGoose, GetGeese } from "..";
 import type { GooseSelect } from "../db/schema";
+import { GooseCard } from "./Goose";
 import GooseForm from "./GooseForm";
 
 const getClient = hc<GetGeese>("/");
@@ -51,6 +51,7 @@ export default function Client() {
     const goose = await res.json();
     // @ts-ignore the geese date entries don't match Date/string
     setGeese((geese) => [...geese, goose]);
+    setShowAddForm(false);
   };
 
   return (
@@ -62,11 +63,11 @@ export default function Client() {
           Add goose
         </button>
       )}
-      <h1>Hi from client</h1>
+      <h1>Silly geese</h1>
 
       <div class={containerClass}>
         {geese.map((goose) => (
-          // biome-ignore lint/correctness/useJsxKeyInIterable: silly
+          // biome-ignore lint/correctness/useJsxKeyInIterable: Ho... no
           <GooseCard {...goose} />
         ))}
       </div>
@@ -81,6 +82,7 @@ const containerClass = css`
   gap: 32px;
 `;
 
-// biome-ignore lint/style/noNonNullAssertion: <explanation>
+/* biome-ignore lint/style/noNonNullAssertion: Biome doesn't know we've been
+amazing and actually added an element with the "root" id */
 const root = document.getElementById("root")!;
 render(<Client />, root);
